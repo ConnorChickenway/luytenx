@@ -61,13 +61,10 @@ public class MainWindow extends JFrame {
         this.setTitle(TITLE);
         this.setIconImage(new ImageIcon(
             Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("/resources/LuytenX.png"))).getImage());
-        
-        JPanel panel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
         label = new JLabel();
         label.setHorizontalAlignment(JLabel.LEFT);
-        panel1.setBorder(new BevelBorder(BevelBorder.LOWERED));
-        panel1.setPreferredSize(new Dimension(this.getWidth() / 2, 20));
-        panel1.add(label);
+        label.setVerticalAlignment(SwingConstants.CENTER);
         
         JPanel panel2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bar = new JProgressBar();
@@ -91,7 +88,7 @@ public class MainWindow extends JFrame {
         jarsTabbedPane.addTab(DEFAULT_TAB, new Model(this));
         this.getContentPane().add(jarsTabbedPane);
         
-        JSplitPane spt = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel1, panel2) {
+        JSplitPane spt = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, label, panel2) {
             private static final long serialVersionUID = 2189946972124687305L;
             private final int location = 400;
             

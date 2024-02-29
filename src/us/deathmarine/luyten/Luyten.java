@@ -7,6 +7,7 @@ import us.deathmarine.luyten.ui.MainWindow;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -15,9 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,7 +29,6 @@ public class Luyten {
     
     private static final AtomicReference<MainWindow> mainWindowRef = new AtomicReference<>();
     private static final List<File> pendingFiles = new ArrayList<>();
-    private static ServerSocket lockSocket = null;
     
     public static void main(final String[] args) {
         try {
@@ -38,6 +38,18 @@ public class Luyten {
             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        // change font size for all components excluding TextArea
+        Enumeration<Object> keys = UIManager.getDefaults().keys();
+        while(keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof FontUIResource originalFont) {
+                if (key.equals("TextArea.font")) continue;
+                Font font = new Font(originalFont.getName(), originalFont.getStyle(), 15);
+                UIManager.put(key, new FontUIResource(font));
+            }
         }
         
         // for TotalCommander External Viewer setting:

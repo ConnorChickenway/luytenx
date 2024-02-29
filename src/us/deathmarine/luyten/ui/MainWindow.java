@@ -18,20 +18,22 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Vector;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.List;
 
 /**
  * Dispatcher
  */
 public class MainWindow extends JFrame {
     private static final long serialVersionUID = 5265556630724988013L;
-    
+    public static final Map<Model, Path> TMP_JAR = new HashMap<>();
+
     private static final String TITLE = "LuytenX";
     private static final String DEFAULT_TAB = "#DEFAULT";
-    
+    private static MainWindow instance;
+
     private JProgressBar bar;
     private JLabel label;
     public FindBox findBox;
@@ -46,6 +48,7 @@ public class MainWindow extends JFrame {
     public MainMenuBar mainMenuBar;
     
     public MainWindow(File fileFromCommandLine) {
+        instance = this;
         configSaver = ConfigSaver.getLoadedInstance();
         windowPosition = configSaver.getMainWindowPosition();
         luytenPrefs = configSaver.getLuytenPreferences();
@@ -171,6 +174,10 @@ public class MainWindow extends JFrame {
         final String tabName = file.getName();
         int index = jarsTabbedPane.indexOfTab(tabName);
         Model.Tab tabUI = new Model.Tab(tabName, () -> {
+            Path path = TMP_JAR.remove(jarModel);
+            if (path != null) {
+                Files.delete(path);
+            }
             int index1 = jarsTabbedPane.indexOfTab(tabName);
             jarModels.remove(file.getAbsolutePath());
             jarsTabbedPane.remove(index1);
@@ -470,6 +477,7 @@ public class MainWindow extends JFrame {
         try {
             windowPosition.readPositionFromWindow(this);
             configSaver.saveConfig();
+            deleteTmpFiles();
         } catch (Exception e) {
             Luyten.showExceptionDialog("Exception!", e);
         } finally {
@@ -507,5 +515,18 @@ public class MainWindow extends JFrame {
     
     public JLabel getLabel() {
         return label;
+    }
+
+    public void deleteTmpFiles() {
+        for (Path tmpFile : TMP_JAR.values()) {
+            try {
+                Files.delete(tmpFile);
+            } catch (IOException ignore) {
+            }
+        }
+    }
+
+    public static MainWindow getInstance() {
+        return instance;
     }
 }

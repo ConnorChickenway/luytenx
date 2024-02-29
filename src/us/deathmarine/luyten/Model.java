@@ -30,6 +30,8 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -63,7 +65,7 @@ public class Model extends JSplitPane {
     private State state;
     private ConfigSaver configSaver;
     private LuytenPreferences luytenPrefs;
-    
+
     public Model(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         this.bar = mainWindow.getBar();
@@ -292,7 +294,7 @@ public class Model extends JSplitPane {
                     }
                 }
                 path.append(name);
-                
+
                 if (file.getName().endsWith(".jar") || file.getName().endsWith(".zip")) {
                     if (state == null) {
                         JarFile jfile = new JarFile(file);
@@ -310,6 +312,24 @@ public class Model extends JSplitPane {
                         throw new TooLargeFileException(entry.getSize());
                     }
                     String entryName = entry.getName();
+                    if (entryName.endsWith(".jar")) {
+                        Path tmpFile = Files.createTempFile(getEntryNameWithoutExtension(entryName) + "-", ".jar");
+                        File file = tmpFile.toFile();
+                        try (OutputStream out = new FileOutputStream(file)) {
+                            InputStream in = state.jarFile.getInputStream(entry);
+                            byte[] buffer = new byte[1024 * 4];
+                            long count = 0;
+                            int n;
+                            long size = entry.getSize();
+                            while (-1 != (n = in.read(buffer)) && count < size) {
+                                out.write(buffer, 0, n);
+                                count += n;
+                            }
+                        }
+                        Model model = MainWindow.getInstance().loadNewFile(file);
+                        MainWindow.TMP_JAR.put(model, tmpFile);
+                        return;
+                    }
                     if (entryName.endsWith(".class")) {
                         getLabel().setText("Extracting: " + name);
                         String internalName = StringUtilities.removeRight(entryName, ".class");
@@ -973,7 +993,12 @@ public class Model extends JSplitPane {
             }
         }).start();
     }
-    
+
+    public String getEntryNameWithoutExtension(String entryName) {
+        String name = entryName.substring(entryName.lastIndexOf(File.separator) + 1);
+        return name.substring(0, name.lastIndexOf("."));
+    }
+
     public JLabel getLabel() {
         return label;
     }
